@@ -199,7 +199,8 @@ func (em *engineManager) openEngineDB(engineUUID uuid.UUID, readOnly bool) (*peb
 		MemTableStopWritesThreshold: 8,
 		MaxConcurrentCompactions:    func() int { return 16 },
 		// set threshold to half of the max open files to avoid trigger compaction
-		L0CompactionThreshold: math.MaxInt32,
+		L0CompactionFileThreshold  15,
+		L0CompactionThreshold: 15,
 		L0StopWritesThreshold: math.MaxInt32,
 		LBaseMaxBytes:         16 * units.TiB,
 		MaxOpenFiles:          em.MaxOpenFiles,
