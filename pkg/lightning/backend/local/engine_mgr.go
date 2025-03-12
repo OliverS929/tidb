@@ -217,6 +217,14 @@ func (em *engineManager) openEngineDB(engineUUID uuid.UUID, readOnly bool) (*peb
 		DisableAutomaticCompactions: em.DisableAutomaticCompactions,
 		Cache:                       pebbleCache,
 	}
+
+	// Log the cache maxSize details
+	if opt.Cache != nil {
+		em.logger.Info("Pebble cache maxSize", zap.Int64("maxSize", opt.Cache.MaxSize()))
+	} else {
+		em.logger.Info("Pebble cache using default maxSize")
+	}
+
 	// set level target file size to avoid pebble auto triggering compaction that split ingest SST files into small SST.
 	opt.Levels = []pebble.LevelOptions{
 		{
