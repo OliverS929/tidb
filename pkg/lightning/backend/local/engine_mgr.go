@@ -197,7 +197,7 @@ func (em *engineManager) flushAllEngines(parentCtx context.Context) (err error) 
 }
 
 func (em *engineManager) openEngineDB(engineUUID uuid.UUID, readOnly bool) (*pebble.DB, error) {
-	pebbleCache := pebble.NewCache(pebbleCacheSize)
+	pebbleCache := pebble.NewCacheDebug(pebbleCacheSize, *em.logger.Logger)
 	defer pebbleCache.Unref()
 	opt := &pebble.Options{
 		MemTableSize: uint64(em.MemTableSize),

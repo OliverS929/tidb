@@ -25,7 +25,7 @@ require (
 	github.com/cheggaaa/pb/v3 v3.0.8
 	github.com/cheynewallace/tabby v1.1.1
 	github.com/cloudfoundry/gosigar v1.3.6
-	github.com/cockroachdb/errors v1.11.1
+	github.com/cockroachdb/errors v1.11.3
 	github.com/cockroachdb/pebble v1.1.0
 	github.com/coocood/freecache v1.2.1
 	github.com/coreos/go-semver v0.3.1
@@ -146,6 +146,7 @@ require (
 )
 
 require (
+	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/getsentry/sentry-go v0.27.0 // indirect
 )
@@ -312,6 +313,7 @@ require (
 )
 
 replace (
+	github.com/cockroachdb/pebble v1.1.0 => github.com/OliverS929/pebble v0.0.0-20250312145207-ce79b1b36d40
 	// fix potential security issue(CVE-2020-26160) introduced by indirect dependency.
 	github.com/dgrijalva/jwt-go => github.com/form3tech-oss/jwt-go v3.2.6-0.20210809144907-32ab6a8243d7+incompatible
 	github.com/go-ldap/ldap/v3 => github.com/YangKeao/ldap/v3 v3.4.5-0.20230421065457-369a3bab1117
