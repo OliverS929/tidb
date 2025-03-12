@@ -44,6 +44,10 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+const (
+	pebbleCacheSize = 256 * units.MB
+)
+
 var (
 	// RunInTest indicates whether the current process is running in test.
 	RunInTest bool
@@ -193,6 +197,8 @@ func (em *engineManager) flushAllEngines(parentCtx context.Context) (err error) 
 }
 
 func (em *engineManager) openEngineDB(engineUUID uuid.UUID, readOnly bool) (*pebble.DB, error) {
+	pebbleCache := pebble.NewCache(pebbleCacheSize)
+	defer pebbleCache.Unref()
 	opt := &pebble.Options{
 		MemTableSize: uint64(em.MemTableSize),
 		// the default threshold value may cause write stall.
@@ -209,6 +215,7 @@ func (em *engineManager) openEngineDB(engineUUID uuid.UUID, readOnly bool) (*peb
 			newRangePropertiesCollector,
 		},
 		DisableAutomaticCompactions: em.DisableAutomaticCompactions,
+		Cache:                       pebbleCache,
 	}
 	// set level target file size to avoid pebble auto triggering compaction that split ingest SST files into small SST.
 	opt.Levels = []pebble.LevelOptions{
