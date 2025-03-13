@@ -16,6 +16,7 @@ package local
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"os"
 	"path/filepath"
@@ -224,6 +225,8 @@ func (em *engineManager) openEngineDB(engineUUID uuid.UUID, readOnly bool) (*peb
 	} else {
 		em.logger.Info("Pebble cache using default maxSize")
 	}
+
+	fmt.Printf("openEngineDB: cache-address: %p", opt.Cache)
 
 	// set level target file size to avoid pebble auto triggering compaction that split ingest SST files into small SST.
 	opt.Levels = []pebble.LevelOptions{
