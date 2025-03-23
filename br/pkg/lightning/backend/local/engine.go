@@ -1599,7 +1599,7 @@ func (i dbSSTIngester) mergeSSTs(metas []*sstMeta, dir string) (*sstMeta, error)
 
 	dur := time.Since(start)
 	i.e.logger.Info("compact sst", zap.Int("fileCount", len(metas)), zap.Int64("size", newMeta.totalSize),
-		zap.Int64("count", newMeta.totalCount), zap.Duration("cost", dur), zap.String("file", name))
+		zap.Int64("count", newMeta.totalCount), zap.Duration("cost", dur), zap.String("file", name), zap.Int64("IndexSize", int64(meta.Properties.IndexSize)), zap.Int64("NumDataBlocks", int64(meta.Properties.NumDataBlocks)), zap.Int64("fileSize", int64(newMeta.fileSize)))
 
 	// async clean raw SSTs.
 	go func() {
