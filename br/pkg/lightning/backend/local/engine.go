@@ -722,10 +722,17 @@ func (e *Engine) ingestSSTLoop() {
 			if m.totalCount > 0 {
 				pendingMetas = append(pendingMetas, m)
 				totalSize += m.totalSize
+				e.logger.Info("ingestSSTLoop addMetas: add sst meta to pending list",
+					zap.String("file", m.path),
+					zap.Int64("size", m.totalSize),
+					zap.Int64("kvs", m.totalCount),
+					zap.Int64("totalSize", m.totalSize))
 				if totalSize >= e.config.CompactThreshold {
 					compactMetas := pendingMetas
 					pendingMetas = make([]*sstMeta, 0, len(pendingMetas))
 					totalSize = 0
+					e.logger.Info("ingestSSTLoop addMetas: compact and ingest sst files",
+						zap.Int("sstCount", len(compactMetas)))
 					compactAndIngestSSTs(compactMetas)
 				}
 			}
