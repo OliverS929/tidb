@@ -726,7 +726,7 @@ func (e *Engine) ingestSSTLoop() {
 					zap.String("file", m.path),
 					zap.Int64("size", m.totalSize),
 					zap.Int64("kvs", m.totalCount),
-					zap.Int64("totalSize", m.totalSize))
+					zap.Int64("totalSize", totalSize))
 				if totalSize >= e.config.CompactThreshold {
 					compactMetas := pendingMetas
 					pendingMetas = make([]*sstMeta, 0, len(pendingMetas))
@@ -1557,6 +1557,7 @@ func (i dbSSTIngester) mergeSSTs(metas []*sstMeta, dir string) (*sstMeta, error)
 		return nil, errors.Trace(err)
 	}
 	newMeta.path = name
+	i.e.logger.Info("mergeSSTs: start to compact sst", zap.Int("fileCount", len(metas)), zap.String("file", name))
 
 	internalKey := sstable.InternalKey{
 		Trailer: uint64(sstable.InternalKeyKindSet),
@@ -1572,7 +1573,7 @@ func (i dbSSTIngester) mergeSSTs(metas []*sstMeta, dir string) (*sstMeta, error)
 	lastKey := make([]byte, 0)
 	for {
 		if bytes.Equal(lastKey, key) {
-			i.e.logger.Warn("duplicated key found, skipped", zap.Binary("key", lastKey))
+			i.e.logger.Debug("duplicated key found, skipped", zap.Binary("key", lastKey))
 			newMeta.totalCount--
 			newMeta.totalSize -= int64(len(key) + len(val))
 
@@ -1594,6 +1595,8 @@ func (i dbSSTIngester) mergeSSTs(metas []*sstMeta, dir string) (*sstMeta, error)
 		}
 	}
 	err = writer.Close()
+	i.e.logger.Info("mergeSSTs: finish compact sst", zap.Int("fileCount", len(metas)), zap.Int64("size", newMeta.totalSize), zap.Int64("count", newMeta.totalCount), zap.String("file", name))
+
 	if err != nil {
 		return nil, errors.Trace(err)
 	}

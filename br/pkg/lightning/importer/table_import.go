@@ -671,7 +671,7 @@ func (tr *TableImporter) preprocessEngine(
 		dataEngineCfg.Local.CompactConcurrency = 4
 		dataEngineCfg.Local.CompactThreshold = local.CompactionUpperThreshold
 	}
-	tr.logger.Info("preprocessEngine ", zap.Bool("Compact ", dataEngineCfg.Local.Compact), zap.Int64("threshold", dataEngineCfg.Local.CompactThreshold))
+	tr.logger.Info("preprocessEngine ", zap.Bool("compact ", dataEngineCfg.Local.Compact), zap.Int64("threshold", dataEngineCfg.Local.CompactThreshold))
 	dataEngine, err := rc.engineMgr.OpenEngine(ctx, dataEngineCfg, tr.tableName, engineID)
 	if err != nil {
 		return nil, errors.Trace(err)
