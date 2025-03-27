@@ -457,6 +457,7 @@ func (tr *TableImporter) importEngines(pCtx context.Context, rc *Controller, cp 
 				idxCnt--
 			}
 			threshold := local.EstimateCompactionThreshold(tr.tableMeta.DataFiles, cp, int64(idxCnt))
+			tr.logger.Info("importEngines set index engine compact threshold", zap.Int64("threshold", threshold))
 			idxEngineCfg.Local = backend.LocalEngineConfig{
 				Compact:            threshold > 0,
 				CompactConcurrency: 4,
@@ -673,6 +674,7 @@ func (tr *TableImporter) preprocessEngine(
 		dataEngineCfg.Local.CompactConcurrency = 4
 		dataEngineCfg.Local.CompactThreshold = local.CompactionUpperThreshold
 	}
+	tr.logger.Info("preprocessEngine ", zap.Bool("compact ", dataEngineCfg.Local.Compact), zap.Int64("threshold", dataEngineCfg.Local.CompactThreshold))
 	dataEngine, err := rc.engineMgr.OpenEngine(ctx, dataEngineCfg, tr.tableName, engineID)
 	if err != nil {
 		return nil, errors.Trace(err)

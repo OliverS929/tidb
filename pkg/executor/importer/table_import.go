@@ -472,6 +472,7 @@ func (ti *TableImporter) OpenIndexEngine(ctx context.Context, engineID int32) (*
 	// todo: getTotalRawFileSize returns size of all data files, but in distributed framework,
 	// we create one index engine for each engine, should reflect this in the future.
 	threshold := local.EstimateCompactionThreshold2(ti.getTotalRawFileSize(int64(idxCnt)))
+	ti.logger.Info("OpenIndexEngine ", zap.Int64("threshold", threshold))
 	idxEngineCfg.Local = backend.LocalEngineConfig{
 		Compact:            threshold > 0,
 		CompactConcurrency: 4,

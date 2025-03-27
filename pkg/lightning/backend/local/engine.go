@@ -747,6 +747,11 @@ func (e *Engine) ingestSSTLoop() {
 			if m.totalCount > 0 {
 				pendingMetas = append(pendingMetas, m)
 				totalSize += m.totalSize
+				e.logger.Info("ingestSSTLoop addMetas: add sst meta to pending list",
+					zap.String("file", m.path),
+					zap.Int64("size", m.totalSize),
+					zap.Int64("kvs", m.totalCount),
+					zap.Int64("totalSize", totalSize))
 				if totalSize >= e.config.CompactThreshold {
 					compactMetas := pendingMetas
 					pendingMetas = make([]*sstMeta, 0, len(pendingMetas))
@@ -1644,6 +1649,7 @@ func (i dbSSTIngester) mergeSSTs(metas []*sstMeta, dir string, blockSize int) (*
 		return nil, errors.Trace(err)
 	}
 	newMeta.path = name
+	i.e.logger.Info("mergeSSTs: start to compact sst", zap.Int("fileCount", len(metas)), zap.String("file", name))
 
 	internalKey := sstable.InternalKey{
 		Trailer: uint64(sstable.InternalKeyKindSet),
@@ -1681,6 +1687,7 @@ func (i dbSSTIngester) mergeSSTs(metas []*sstMeta, dir string, blockSize int) (*
 		}
 	}
 	err = writer.Close()
+	i.e.logger.Info("mergeSSTs: finish compact sst", zap.Int("fileCount", len(metas)), zap.Int64("size", newMeta.totalSize), zap.Int64("count", newMeta.totalCount), zap.String("file", name))
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
