@@ -19,6 +19,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -49,6 +50,9 @@ var (
 	RunInTest bool
 	// LastAlloc is the last ID allocator.
 	LastAlloc atomic.Pointer[manual.Allocator]
+
+	DefaultPebbleCacheSize         = 8 * units.MiB
+	DefaultPebbleCacheSizePerShard = 64 * units.MiB
 )
 
 // StoreHelper have some api to help encode or store KV data
@@ -70,6 +74,19 @@ type engineManager struct {
 }
 
 var inMemTest = false
+
+// In here we are trying to allign our cache size calculation with that of Pebble
+// so that we will be able to have enough target size per shard in Pebble cache.
+func caculateTotalPebbleCacheSize() (int64, int) {
+	m := 4 * runtime.GOMAXPROCS(0)
+
+	const minimumShardSize = 4 << 20 // 4 MiB
+	if m > 4 && int64(DefaultPebbleCacheSize)/int64(m) < minimumShardSize {
+		m = 4
+	}
+
+	return int64(m) * int64(DefaultPebbleCacheSizePerShard), m
+}
 
 func newEngineManager(config BackendConfig, storeHelper StoreHelper, logger log.Logger) (_ *engineManager, err error) {
 	var duplicateDB *pebble.DB
@@ -200,6 +217,9 @@ func (em *engineManager) flushAllEngines(parentCtx context.Context) (err error) 
 }
 
 func (em *engineManager) openEngineDB(engineUUID uuid.UUID, readOnly bool) (*pebble.DB, error) {
+	cacheSize, numShards := caculateTotalPebbleCacheSize()
+	pebbleCache := pebble.NewCache(cacheSize)
+	defer pebbleCache.Unref()
 	opt := &pebble.Options{
 		MemTableSize: uint64(em.MemTableSize),
 		// the default threshold value may cause write stall.
@@ -216,6 +236,7 @@ func (em *engineManager) openEngineDB(engineUUID uuid.UUID, readOnly bool) (*peb
 			newRangePropertiesCollector,
 		},
 		DisableAutomaticCompactions: em.DisableAutomaticCompactions,
+		Cache:                       pebbleCache,
 	}
 	// set level target file size to avoid pebble auto triggering compaction that split ingest SST files into small SST.
 	opt.Levels = []pebble.LevelOptions{
@@ -227,6 +248,7 @@ func (em *engineManager) openEngineDB(engineUUID uuid.UUID, readOnly bool) (*peb
 
 	dbPath := filepath.Join(em.LocalStoreDir, engineUUID.String())
 	db, err := pebble.Open(dbPath, opt)
+	em.logger.Info("Open Pebble with setting", zap.Int64("cache size", cacheSize), zap.Int("number of shards", numShards))
 	return db, errors.Trace(err)
 }
 
