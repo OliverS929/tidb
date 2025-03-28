@@ -80,11 +80,6 @@ var inMemTest = false
 func caculateTotalPebbleCacheSize() (int64, int) {
 	m := 4 * runtime.GOMAXPROCS(0)
 
-	const minimumShardSize = 4 << 20 // 4 MiB
-	if m > 4 && int64(DefaultPebbleCacheSize)/int64(m) < minimumShardSize {
-		m = 4
-	}
-
 	return int64(m) * int64(DefaultPebbleCacheSizePerShard), m
 }
 
