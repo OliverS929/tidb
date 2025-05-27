@@ -467,7 +467,23 @@ func (local *Backend) doWrite(ctx context.Context, j *regionJob) (*tikvWriteResu
 			innerTimeout = 5 * time.Millisecond // default
 		}
 		log.FromContext(ctx).Info("Injecting a timeout to write context.")
+		fmt.Println("Injecting a timeout to write context.")
 	})
+
+	// continue the work for write timeout injection, and create a new context if innerTimeout > 0
+	// with a much shorter timeout, so that the WaitN call will return with common.ErrWriteTooSlow
+	wctx := originalCtx
+	wcancel := func() {}
+	if innerTimeout > 0 {
+		wctx, wcancel = context.WithTimeoutCause(
+			originalCtx, innerTimeout, common.ErrWriteTooSlow)
+
+		// ensure subsequent WaitN calls fall back to outerCtx
+		innerTimeout = 0
+	}
+	defer wcancel()
+
+	log.FromContext(ctx).Info("After injecting a timeout to write context.")
 
 	flushKVs := func() error {
 		req.Chunk.(*sst.WriteRequest_Batch).Batch.Pairs = pairs[:count]
@@ -477,19 +493,6 @@ func (local *Backend) doWrite(ctx context.Context, j *regionJob) (*tikvWriteResu
 		if err := preparedMsg.Encode(clients[0], req); err != nil {
 			return err
 		}
-
-		// continue the work for write timeout injection, and create a new context if innerTimeout > 0
-		// with a much shorter timeout, so that the WaitN call will return with common.ErrWriteTooSlow
-		wctx := originalCtx
-		wcancel := func() {}
-		if innerTimeout > 0 {
-			wctx, wcancel = context.WithTimeoutCause(
-				originalCtx, innerTimeout, common.ErrWriteTooSlow)
-
-			// ensure subsequent WaitN calls fall back to outerCtx
-			innerTimeout = 0
-		}
-		defer wcancel()
 
 		for i := range clients {
 			// original ctx would be used when failpoint is not enabled
