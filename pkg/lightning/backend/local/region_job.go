@@ -466,6 +466,7 @@ func (local *Backend) doWrite(ctx context.Context, j *regionJob) (*tikvWriteResu
 		} else {
 			innerTimeout = 5 * time.Millisecond // default
 		}
+		log.FromContext(ctx).Info("Injecting a timeout to write context.")
 	})
 
 	flushKVs := func() error {
