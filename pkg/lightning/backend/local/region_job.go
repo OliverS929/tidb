@@ -500,7 +500,7 @@ func (local *Backend) doWrite(ctx context.Context, j *regionJob) (*tikvWriteResu
 			err := writeLimiter.WaitN(wctx, allPeers[i].StoreId, int(size))
 			if err != nil {
 				if goerrors.Is(err, context.DeadlineExceeded) {
-					if cause := context.Cause(ctx); goerrors.Is(cause, common.ErrWriteTooSlow) {
+					if cause := context.Cause(wctx); goerrors.Is(cause, common.ErrWriteTooSlow) {
 						log.FromContext(ctx).Info("Experiencing a wait timeout while writing to tikv",
 							zap.Int("store-write-bwlimit", local.BackendConfig.StoreWriteBWLimit),
 							zap.Int("limit-size", writeLimiter.Limit()))
