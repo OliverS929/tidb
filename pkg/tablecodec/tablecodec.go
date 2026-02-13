@@ -1300,7 +1300,6 @@ func GenIndexKey(loc *time.Location, tblInfo *model.TableInfo, idxInfo *model.In
 			return nil, false, err
 		}
 	}
-	// Build the index key with format: t[tableID]_i[indexID][encodedKeyValues][handle(if not distinct)]
 	key = GetIndexKeyBuf(buf, RecordRowKeyLen+len(keyValues)*9+9)
 	key = appendTableIndexPrefix(key, phyTblID)
 	key = codec.EncodeInt(key, idxInfo.ID)
